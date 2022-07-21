@@ -1,42 +1,6 @@
 version: 2.1
 
 commands:
-  destroy-environment:
-    description: delete stacks on failure
-    parameters:
-      workflow-id:
-        type: string
-        default: "{CIRCLE_WORKFLOW_ID:0:7}"
-    steps:
-      - run:
-          name: Destroy Environment
-          when: on_fail
-          command: |
-            aws cloudformation delete-stack \
-              --stack-name udapeople-backend-<< parameters.workflow-id >> \
-              --region us-east-1
-            aws s3 rm s3://udapeople-<< parameters.workflow-id >> --recursive
-            aws cloudformation delete-stack \
-              --stack-name udapeople-frontend-<< parameters.workflow-id >> \
-              --region us-east-1  
-  reverse-migration:
-    description: Reverse migration on failure response
-    parameters:
-      workflow-id:
-        type: string
-        default: "${CIRCLE_WORKFLOW_ID:0:7}"
-    steps:
-      - run:
-          name: reverse migration
-          when: on_fail
-          command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/4Ki8mGdqFEsVFEJFLoCvgM/migration_<< parameters.workflow-id >>)
-            if(( $SUCCESS==1 )); 
-            then
-              cd ~/project/backend
-              npm install
-              npm run migrations:revert
-            fi         
 jobs:
   build-frontend:
     docker:
@@ -70,13 +34,76 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-  
+  test-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Run frontend test
+          command: |
+            cd frontend
+            npm install
+            npm run test
+  test-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Run backend test
+          command: |
+            cd backend
+            npm install
+            npm run test
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Analyze for security vulnerability in frontend
+          command: |
+            cd frontend
+            npm install
+            npm install oauth-sign@^0.9.0
+            npm audit fix --audit-level=critical --force
+            npm audit fix --force
+            npm audit --audit-level=critical --force
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Analyze for security vulnerability in backend
+          command: |
+            cd backend
+            npm install
+            npm audit fix --audit-level=critical --force
+
 workflows:
   default:
     jobs:
       - build-frontend
       - build-backend
-      
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - scan-backend:
+          requires: [build-backend]
+
     
       
     
