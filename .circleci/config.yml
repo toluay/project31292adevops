@@ -362,8 +362,8 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
       - reverse-migration:
-          id: ${CIRCLE_WORKFLOW_ID:0:7}
-          when: on_fail
+          workflow-id: ${CIRCLE_WORKFLOW_ID:0:7}
+          
   cleanup:
     docker:
       - image: amazon/aws-cli
