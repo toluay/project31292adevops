@@ -354,12 +354,11 @@ jobs:
             curl --insecure https://kvdb.io/4Ki8mGdqFEsVFEJFLoCvgM/WorkflowID -d $WorkflowID
       - run:
           name: Update cloudfront distribution
-          working_directory: ./.circleci/files
           command: |
             aws cloudformation deploy \
-              --template-file cloudfront.yaml \
-              --stack-name udapeople-cloudfront-production \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}"\
               --tags project=udapeople
       - reverse-migration:
           workflow-id: ${CIRCLE_WORKFLOW_ID:0:7}
