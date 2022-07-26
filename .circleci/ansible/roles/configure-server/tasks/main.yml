@@ -1,44 +1,26 @@
 ---
-- name: "show remote environment"
-  shell: env
-  
-- name: "update apt packages."
-  become: yes
-  apt:
-    update_cache: true
 
-- name: "upgrade packages"
-  become: yes
+- name: "upgrade packages."
+  become: true
   apt:
-    upgrade: true
+    upgrade: "yes"
 
-- name: "remove dependencies that are no longer required"
-  become: yes
-  apt:
-    autoremove: true
-
-- name: "install nodejs and npm"
-  become: yes
+- name: "install dependencies."
+  become: true
   apt:
     name: ["nodejs", "npm"]
     state: latest
-    update_cache: true
-
-- name: "install n"
-  become: yes
-  npm:
-    name: n
-    global: true
-    production: true
-
-- name: "install nodejs 13.8.0"
-  become: yes
-  shell: n 13.8.0
+    update_cache: yes
 
 - name: "install pm2"
-  become: yes
+  become: true
   npm:
     name: pm2
-    global: true
-    production: true
+    global: yes
+    production: yes
     state: present
+- name: "move env variable to /etc/profile.d/"
+  become: true
+  copy:
+    src: myenv.sh
+    dest: /etc/profile.d/
