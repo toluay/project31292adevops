@@ -1,2 +1,0 @@
-Provide a URL to your public GitHub repository
-https://github.com/toluay/project31292adevops
